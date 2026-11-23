@@ -2,88 +2,109 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>BLUE.BERRY</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>The Needoh Group</title>
         <style>
             body {
                 margin:0px;
             }
-            
+
             * {
                 font-family:"comic sans ms", "comic sans", sans-serif;
                 box-sizing:border-box;
             }
-            
+
             header {
-                background-color:#007BFF;
+                background-color:lime;
                 padding:20px;
                 display:flex;
                 justify-content:space-between;
-                box-shadow: 0px 7px 16px #007BFF;
+                align-items:center;
+                box-shadow: 0px 7px 16px lime;
             }
-            
+
             header strong {
                 color:white;
             }
-            
+
+            nav {
+                display:flex;
+                gap:8px;
+            }
+
             .action-btn {
                 color:white;
-                background-color:#007BFF;
-                border:2px solid #007BFF;
+                background-color:lime;
+                border:2px solid lime;
                 border-radius:8px;
                 font-weight:bold;
                 padding:5px;
                 font-size:15px;
+                cursor:pointer;
+                text-decoration:none;
             }
-            
+
+            /* Buttons in the green header need a white outline to show up */
+            header .action-btn {
+                border-color:white;
+            }
+
             #board-input {
-                border:2px solid #007BFF;
+                border:2px solid lime;
                 border-radius:8px;
                 margin-top:20px;
                 margin-bottom:5px;
                 min-height:120px;
                 padding:10px;
             }
-            
+
             #board-compose {
                 display:flex;
                 flex-direction:column;
+                gap:5px;
             }
-            
+
+            #board-status {
+                min-height:1.2em;
+                margin:4px 0;
+                color:#64748b;
+            }
+
             #message-board {
                 margin-left:10px;
                 margin-right:10px;
             }
-            
+
             #login-box {
                 text-align:center;
                 border-radius:8px;
-                border:2px solid #007BFF;
+                border:2px solid lime;
                 height:80%;
                 width:80%;
                 margin:10%;
                 background-color:#64D7FF;
             }
-            
+
             #login-box input, #login-box button {
                 border-radius:8px;
-                border:2px solid #007BFF;
+                border:2px solid lime;
                 padding:5px;
                 background-color:rgb(215, 240, 242);
                 margin-bottom:5px;
             }
-            
+
             #login-box h2 {
                 color:white;
             }
-            
+
             #site-content {
                 display:none;
             }
-            
+
             button.secondary-btn {
               background: white;
-              color: #007BFF;
-              border: 1px solid #007BFF;
+              color: lime;
+              border: 1px solid lime;
               padding: 0.6rem 1.2rem;
               border-radius: 4px;
               font-weight: bold;
@@ -92,9 +113,45 @@
               letter-spacing: 1px;
               transition: all 0.2s ease;
             }
-        
+
             button.secondary-btn:hover {
-              box-shadow: 0 0 10px #007BFF;
+              box-shadow: 0 0 10px lime;
+            }
+
+            .card {
+              overflow: hidden;
+            }
+
+            /* Moved out of the inline style strings so the JS stays readable */
+            .avatar {
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              width:24px;
+              height:24px;
+              border-radius:50%;
+              background:linear-gradient(135deg, #00f0ff, #7928ca);
+              color:#0b0d17;
+              font-weight:bold;
+              font-size:0.75rem;
+              margin-right:6px;
+              cursor:default;
+            }
+
+            .msg-time {
+              color:#64748b;
+              font-size:0.75rem;
+            }
+
+            .msg-btn {
+              font-size:0.7rem !important;
+              padding:2px 8px !important;
+              margin-left:6px;
+            }
+
+            .reply {
+              border-left:2px solid #7928ca;
+              padding-left:10px;
             }
         </style>
     </head>
@@ -108,63 +165,54 @@
         </div>
         <div id="site-content">
             <header>
-                <strong>BLUE.BERRY</strong>
-                <strong>CHATTING PLATFORM 🚀</strong>
+                <strong>NEEDOH GROUP</strong>
+                <nav>
+                  <a class="action-btn" target="_blank" rel="noopener" href="https://vsbworld-my.sharepoint.com/:w:/r/personal/2194526_learn_vsb_bc_ca/Documents/DON%202%20STORYBOARD.docx?d=w07ab7426abc04afc88a3796281308903&csf=1&web=1&e=YUKKR7">Go to Script</a>
+                  <button class="action-btn" onclick="logout()">Log Out</button>
+                </nav>
             </header>
             <main>
                 <div id="message-board">
+                <div class="card">
                     <div id="board-messages"></div>
                     <div id="board-compose">
                         <textarea id="board-input" placeholder="Type a message..." maxlength="1000"></textarea>
                         <button class="action-btn" onclick="postBoardMessage()">Post</button>
+                        <button class="secondary-btn" id="cancel-reply-btn" onclick="cancelReply()" style="display:none;">Cancel Reply</button>
+                        <p id="board-status"></p>
                     </div>
+                </div>
                 </div>
             </main>
         </div>
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-                import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-                import { getDatabase, ref, push, onValue, get, set, remove } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
-        
-            const firebaseConfig = {
-                apiKey: "AIzaSyBfDGzeL-okz84Wqh7FBD9Pmi0O_SsKuq4",
-                authDomain: "blue-berry-3b1de.firebaseapp.com",
-                projectId: "blue-berry-3b1de",
-                storageBucket: "blue-berry-3b1de.firebasestorage.app",
-                messagingSenderId: "2636710459",
-                appId: "1:2636710459:web:a62019fbcb66821f9f121e"
-            };
-        
+       <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, set, runTransaction, update } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+
+          // Your web app's Firebase configuration
+          const firebaseConfig = {
+            apiKey: "AIzaSyDVqlw2b8mhd_4maKoO7yaGyvMPPZEWmWQ",
+            authDomain: "d-needoh-group.firebaseapp.com",
+            projectId: "d-needoh-group",
+            storageBucket: "d-needoh-group.firebasestorage.app",
+            messagingSenderId: "416831723714",
+            appId: "1:416831723714:web:3cbe564d78644b3124435b"
+          };
+
+          // Initialize Firebase
           const app = initializeApp(firebaseConfig);
           const auth = getAuth(app);
           const db = getDatabase(app);
-        
-          // Make these available globally so your other JS (or later code) can use them
-          window.firebaseAuth = auth;
-          window.firebaseDB = db;
-        
-          window.login = function() {
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            signInWithEmailAndPassword(auth, email, password)
-              .catch((error) => {
-                document.getElementById("login-status").textContent = "Login failed: " + error.message;
-              });
-          };
-        
-          onAuthStateChanged(auth, (user) => {
-            if (user) {
-              console.log("Signed in as:", user.email);
-              document.getElementById("login-box").style.display = "none";
-              document.getElementById("site-content").style.display = "block";
-              loadBoardMessages();
-            } else {
-              console.log("Not signed in");
-              document.getElementById("login-box").style.display = "block";
-              document.getElementById("site-content").style.display = "none";
-            }
-          });
-          
+
+          // The most recent copy of /messages from the live listener.
+          // Rendering always uses this, so edit/delete/post never need their own fetch.
+          var latestSnapshot = null;
+          var unsubscribeMessages = null;
+          var statusTimer = null;
+
+          // ---------- Helpers ----------
+
           function getDisplayName(email) {
               if (!email) {
                 return "Unknown";
@@ -172,109 +220,359 @@
               var name = email.split("@")[0];
               return name.charAt(0).toUpperCase() + name.slice(1);
           }
-          
+
+          function setBoardStatus(text) {
+            var status = document.getElementById("board-status");
+            status.innerText = text;
+            clearTimeout(statusTimer);
+            statusTimer = setTimeout(function() {
+              status.innerText = "";
+            }, 3000);
+          }
+
+          function isReplying() {
+            return !!document.getElementById("board-input").dataset.replyToId;
+          }
+
+          // ---------- Login / logout ----------
+
+          function friendlyAuthError(code) {
+            if (code === "auth/invalid-email") return "That email doesn't look right.";
+            if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") return "Wrong email or password.";
+            if (code === "auth/too-many-requests") return "Too many tries. Wait a minute and try again.";
+            if (code === "auth/network-request-failed") return "Network problem. Check your connection.";
+            return "Couldn't log in (" + code + ").";
+          }
+
+          function login() {
+            var email = document.getElementById("email").value.trim();
+            var password = document.getElementById("password").value;
+            var status = document.getElementById("login-status");
+
+            if (email === "" || password === "") {
+              status.innerText = "Enter your email and password.";
+              return;
+            }
+
+            status.innerText = "Logging in...";
+            signInWithEmailAndPassword(auth, email, password)
+              .then(function() {
+                status.innerText = "";
+                document.getElementById("password").value = "";
+              })
+              .catch(function(error) {
+                status.innerText = friendlyAuthError(error.code);
+              });
+          }
+          window.login = login;
+
+          document.getElementById("password").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+              login();
+            }
+          });
+
+          function logout() {
+            signOut(auth);
+          }
+          window.logout = logout;
+
+          // Runs on page load (Firebase remembers the session) and on every login/logout.
+          onAuthStateChanged(auth, function(user) {
+            var loginBox = document.getElementById("login-box");
+            var siteContent = document.getElementById("site-content");
+
+            if (user) {
+              loginBox.style.display = "none";
+              siteContent.style.display = "block";
+
+              // Live listener: fires once now, then again whenever anyone posts, edits or deletes.
+              unsubscribeMessages = onValue(ref(db, "messages"), function(snapshot) {
+                latestSnapshot = snapshot;
+                loadBoardMessages();
+              }, function(error) {
+                setBoardStatus("Couldn't load messages: " + error.message);
+              });
+            } else {
+              if (unsubscribeMessages) {
+                unsubscribeMessages();
+                unsubscribeMessages = null;
+              }
+              resetCompose();
+              latestSnapshot = null;
+              document.getElementById("board-messages").replaceChildren();
+              siteContent.style.display = "none";
+              loginBox.style.display = "block";
+            }
+          });
+
+          // ---------- Posting ----------
+
           function postBoardMessage() {
-              var input = document.getElementById("board-input");
-              var text = input.value.trim();
-            
-              if (text === "") {
-                return;
-              }
-            
-              var user = auth.currentUser;
-              if (!user) {
-                return;
-              }
-            
-              var replyToId = input.dataset.replyToId || null;
-            
-              push(ref(db, "messages/" + user.uid), {
-                sender: getDisplayName(user.email),
-                text: text,
-                time: Date.now(),
-                replyToId: replyToId
+            var input = document.getElementById("board-input");
+            var text = input.value.trim();
+
+            if (text === "") {
+              return;
+            }
+
+            var user = auth.currentUser;
+            if (!user) {
+              return;
+            }
+
+            var replyToId = input.dataset.replyToId || null;
+
+            push(ref(db, "messages/" + user.uid), {
+              sender: getDisplayName(user.email),
+              text: text,
+              time: Date.now(),
+              replyToId: replyToId
+            }).then(function() {
+              setBoardStatus("Posted!");
+            }).catch(function(error) {
+              setBoardStatus("Couldn't post: " + error.message);
+            });
+
+            resetCompose();
+            loadBoardMessages();
+          }
+          window.postBoardMessage = postBoardMessage;
+
+          // ---------- Deleting ----------
+
+          function confirmDeleteMessage(msg) {
+            var confirmed = confirm("Delete this message? Any replies to it will be deleted too. This can't be undone.");
+            if (!confirmed) {
+              return;
+            }
+            deleteMessageAndReplies(msg);
+          }
+          window.confirmDeleteMessage = confirmDeleteMessage;
+
+          function deleteMessageAndReplies(msg) {
+            if (!latestSnapshot) {
+              return;
+            }
+
+            // Map each message id to the user folder it lives in, and collect replies by parent.
+            var ownerOf = {};
+            var childrenOf = {};
+            latestSnapshot.forEach(function(userNode) {
+              userNode.forEach(function(msgNode) {
+                var m = msgNode.val();
+                ownerOf[msgNode.key] = userNode.key;
+                if (m.replyToId) {
+                  if (!childrenOf[m.replyToId]) childrenOf[m.replyToId] = [];
+                  childrenOf[m.replyToId].push(msgNode.key);
+                }
               });
-            
-              input.value = "";
-              delete input.dataset.replyToId;
-            
-              var boardDiv = document.getElementById("board-messages");
-              boardDiv.insertAdjacentElement("afterend", document.getElementById("board-compose"));
-            
-              loadBoardMessages();
+            });
+
+            // Walk down the thread and mark every path for deletion (null = delete).
+            var updates = {};
+            function mark(id) {
+              updates["messages/" + ownerOf[id] + "/" + id] = null;
+              (childrenOf[id] || []).forEach(mark);
             }
-            window.postBoardMessage = postBoardMessage;
-    
-            function loadBoardMessages() {
-              get(ref(db, "messages")).then(function(snapshot) {
-                var allMessages = [];
-            
-                snapshot.forEach(function(userNode) {
-                  userNode.forEach(function(msgNode) {
-                    var msg = msgNode.val();
-                    msg.id = msgNode.key;
-                    allMessages.push(msg);
-                  });
-                });
-            
-                allMessages.sort(function(a, b) {
-                  return a.time - b.time;
-                });
-            
-                var boardDiv = document.getElementById("board-messages");
-                boardDiv.innerHTML = "";
-            
-                var wrappersById = {};
-            
-                allMessages.forEach(function(msg) {
-                  var wrapper = document.createElement("div");
-                  wrapper.style.marginBottom = "8px";
-            
-                  if (msg.replyToId) {
-                    wrapper.style.marginLeft = "30px";
-                    wrapper.style.borderLeft = "2px solid #7928ca";
-                    wrapper.style.paddingLeft = "10px";
-                  }
-            
-                  var msgElement = document.createElement("p");
-                  var initial = msg.sender.charAt(0).toUpperCase();
-                  msgElement.innerHTML = "<span style='display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:#007BFF; color:#0b0d17; font-weight:bold; font-size:0.75rem; margin-right:6px; cursor:default;'>" + initial + "</span>" + "(" + msg.sender + ") " + msg.text;
-            
-                  var replyBtn = document.createElement("button");
-                  replyBtn.className = "secondary-btn";
-                  replyBtn.innerText = "Reply";
-                  replyBtn.style.fontSize = "0.7rem";
-                  replyBtn.style.padding = "2px 8px";
-                  replyBtn.style.marginLeft = "6px";
-                  replyBtn.onclick = function() {
-                    replyToMessage(msg.sender, msg.id, wrapper);
-                  };
-            
-                  msgElement.appendChild(replyBtn);
-                  wrapper.appendChild(msgElement);
-            
-                  wrappersById[msg.id] = wrapper;
-            
-                  if (msg.replyToId && wrappersById[msg.replyToId]) {
-                    wrappersById[msg.replyToId].insertAdjacentElement("afterend", wrapper);
-                  } else {
-                    boardDiv.appendChild(wrapper);
-                  }
-                });
+            mark(msg.id);
+
+            // One multi-path update: either the whole thread goes, or nothing does.
+            update(ref(db), updates).catch(function(error) {
+              setBoardStatus("Couldn't delete: " + error.message);
+            });
+          }
+
+          // ---------- Editing ----------
+
+          function editMessage(msg) {
+            var newText = prompt("Edit your message:", msg.text);
+
+            if (newText === null) {
+              return;
+            }
+
+            newText = newText.trim();
+            if (newText === "") {
+              return;
+            }
+
+            var user = auth.currentUser;
+            if (!user) {
+              return;
+            }
+
+            set(ref(db, "messages/" + user.uid + "/" + msg.id + "/text"), newText).catch(function(error) {
+              setBoardStatus("Couldn't edit: " + error.message);
+            });
+          }
+          window.editMessage = editMessage;
+
+          // ---------- Rendering ----------
+
+          function getRelativeTime(timestamp) {
+            var now = Date.now();
+            var diffMs = now - timestamp;
+            var diffSeconds = Math.floor(diffMs / 1000);
+            var diffMinutes = Math.floor(diffSeconds / 60);
+            var diffHours = Math.floor(diffMinutes / 60);
+            var diffDays = Math.floor(diffHours / 24);
+
+            if (diffSeconds < 60) {
+              return "just now";
+            } else if (diffMinutes < 60) {
+              return diffMinutes + " minute" + (diffMinutes === 1 ? "" : "s") + " ago";
+            } else if (diffHours < 24) {
+              return diffHours + " hour" + (diffHours === 1 ? "" : "s") + " ago";
+            } else if (diffDays === 1) {
+              return "yesterday";
+            } else if (diffDays < 7) {
+              return diffDays + " days ago";
+            } else {
+              var date = new Date(timestamp);
+              return date.toLocaleDateString();
+            }
+          }
+
+          function makeButton(label, onClick) {
+            var btn = document.createElement("button");
+            btn.className = "secondary-btn msg-btn";
+            btn.innerText = label;
+            btn.onclick = onClick;
+            return btn;
+          }
+
+          function buildMessage(msg, depth) {
+            var wrapper = document.createElement("div");
+            wrapper.style.marginBottom = "8px";
+
+            if (depth > 0) {
+              wrapper.className = "reply";
+              wrapper.style.marginLeft = (Math.min(depth, 4) * 30) + "px";
+            }
+
+            var sender = msg.sender || "Unknown";
+            var msgElement = document.createElement("p");
+
+            // textContent (not innerHTML) so a message like "<img onerror=...>" shows as text instead of running.
+            var avatar = document.createElement("span");
+            avatar.className = "avatar";
+            avatar.title = sender;
+            avatar.textContent = sender.charAt(0).toUpperCase();
+            msgElement.appendChild(avatar);
+
+            msgElement.appendChild(document.createTextNode(" (" + sender + ") | " + (msg.text || "") + " "));
+
+            var timeSpan = document.createElement("span");
+            timeSpan.className = "msg-time";
+            timeSpan.textContent = "· " + getRelativeTime(msg.time);
+            msgElement.appendChild(timeSpan);
+
+            // Compare by uid (the folder the message lives in), not display name:
+            // two people could share the same email prefix.
+            var user = auth.currentUser;
+            if (user && user.uid === msg.uid) {
+              msgElement.appendChild(makeButton("Edit", function() { editMessage(msg); }));
+              msgElement.appendChild(makeButton("Delete", function() { confirmDeleteMessage(msg); }));
+            }
+
+            msgElement.appendChild(makeButton("Reply", function() {
+              replyToMessage(sender, msg.id, wrapper);
+            }));
+
+            wrapper.appendChild(msgElement);
+            return wrapper;
+          }
+
+          function loadBoardMessages() {
+            // While replying, the compose box sits inside #board-messages,
+            // so redrawing now would wipe it. Skip; we redraw when the reply ends.
+            if (!latestSnapshot || isReplying()) {
+              return;
+            }
+
+            var allMessages = [];
+            var byId = {};
+
+            latestSnapshot.forEach(function(userNode) {
+              userNode.forEach(function(msgNode) {
+                var msg = msgNode.val();
+                msg.id = msgNode.key;
+                msg.uid = userNode.key;
+                allMessages.push(msg);
+                byId[msg.id] = msg;
+              });
+            });
+
+            allMessages.sort(function(a, b) {
+              return a.time - b.time;
+            });
+
+            // Group replies under their parent. A reply whose parent is gone shows at the top level.
+            var childrenOf = {};
+            var topLevel = [];
+            allMessages.forEach(function(msg) {
+              if (msg.replyToId && byId[msg.replyToId]) {
+                if (!childrenOf[msg.replyToId]) childrenOf[msg.replyToId] = [];
+                childrenOf[msg.replyToId].push(msg);
+              } else {
+                topLevel.push(msg);
+              }
+            });
+
+            var boardDiv = document.getElementById("board-messages");
+            boardDiv.replaceChildren();
+
+            // Draw a message, then its replies (oldest first), then their replies, and so on.
+            function renderThread(msg, depth) {
+              boardDiv.appendChild(buildMessage(msg, depth));
+              (childrenOf[msg.id] || []).forEach(function(child) {
+                renderThread(child, depth + 1);
               });
             }
-            window.loadBoardMessages = loadBoardMessages;
-            
-            function replyToMessage(name, messageId, messageWrapper) {
-              var compose = document.getElementById("board-compose");
-              messageWrapper.insertAdjacentElement("afterend", compose);
-            
-              var textarea = document.getElementById("board-input");
-              textarea.dataset.replyToId = messageId;
-              textarea.value = "@" + name + " ";
-              textarea.focus();
-            }
-            window.replyToMessage = replyToMessage;
+
+            topLevel.forEach(function(msg) {
+              renderThread(msg, 0);
+            });
+          }
+          window.loadBoardMessages = loadBoardMessages;
+
+          // Keep "5 minutes ago" labels fresh.
+          setInterval(loadBoardMessages, 60000);
+
+          // ---------- Replying ----------
+
+          function replyToMessage(name, messageId, messageWrapper) {
+            var compose = document.getElementById("board-compose");
+            messageWrapper.insertAdjacentElement("afterend", compose);
+
+            var textarea = document.getElementById("board-input");
+            textarea.dataset.replyToId = messageId;
+            textarea.value = "@" + name + " ";
+            textarea.focus();
+
+            document.getElementById("cancel-reply-btn").style.display = "inline-block";
+          }
+          window.replyToMessage = replyToMessage;
+
+          // Puts the compose box back under the board and clears reply state.
+          function resetCompose() {
+            var compose = document.getElementById("board-compose");
+            var boardMessages = document.getElementById("board-messages");
+            boardMessages.insertAdjacentElement("afterend", compose);
+
+            var textarea = document.getElementById("board-input");
+            delete textarea.dataset.replyToId;
+            textarea.value = "";
+
+            document.getElementById("cancel-reply-btn").style.display = "none";
+          }
+
+          function cancelReply() {
+            resetCompose();
+            loadBoardMessages();
+          }
+          window.cancelReply = cancelReply;
         </script>
     </body>
 </html>
